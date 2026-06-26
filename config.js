@@ -17,7 +17,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // URL da página exclusiva no Canva (a página com os materiais do Hackathon)
 // Substitua pelo link real da página/site do Canva quando estiver pronta.
-const CANVA_AREA_EXCLUSIVA_URL = "https://www.canva.com/design/SEU_LINK_AQUI/view";
+const CANVA_AREA_EXCLUSIVA_URL = "https://hackathonunicesumar.com.br/exclusivo";
 
 // Nome do evento (aparece no título e nos textos das páginas)
 // Pode editar livremente aqui sem precisar tocar no resto do código.
