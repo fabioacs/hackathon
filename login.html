@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — Área Exclusiva</title>
+
+<!-- SDK do Supabase (necessário para autenticação) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Arquivo de configuração compartilhado (URL/chave do Supabase, link do Canva) -->
+<script src="config.js"></script>
+
+<style>
+  :root {
+    --bg: #121317;
+    --card-bg: #1b1d24;
+    --border: #2a2d36;
+    --text-primary: #f4f4f6;
+    --text-secondary: #9a9ca6;
+    --accent: #5b8def;
+    --accent-hover: #4575d6;
+    --error-bg: #3a1f23;
+    --error-text: #ff8a8a;
+    --radius: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .page {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0 0 6px 0;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 28px 0;
+    color: var(--text-primary);
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 13px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    border-color: var(--accent);
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button[type="submit"]:hover {
+    background: var(--accent-hover);
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .message {
+    display: none;
+    margin-top: 16px;
+    padding: 11px 13px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .message.error {
+    display: block;
+    background: var(--error-bg);
+    color: var(--error-text);
+  }
+
+  .footer-note {
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="card">
+    <p class="eyebrow" id="eyebrow-evento">Área exclusiva</p>
+    <h1 id="titulo-pagina">Acesse com seu login</h1>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" autocomplete="email" required />
+      </div>
+
+      <div class="field">
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" name="senha" autocomplete="current-password" required />
+      </div>
+
+      <button type="submit" id="botao-entrar">Entrar</button>
+
+      <div class="message error" id="mensagem-erro"></div>
+    </form>
+
+    <p class="footer-note">
+      Use o e-mail e a senha enviados para você por e-mail após a inscrição.
+    </p>
+  </div>
+</div>
+
+<script>
+  // Inicializa o cliente do Supabase usando as credenciais do config.js
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Atualiza textos com o nome do evento definido em config.js
+  document.getElementById("eyebrow-evento").textContent = NOME_EVENTO;
+
+  const form = document.getElementById("login-form");
+  const botaoEntrar = document.getElementById("botao-entrar");
+  const mensagemErro = document.getElementById("mensagem-erro");
+
+  // Se a pessoa já estiver logada, decide para onde mandar
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+    if (data.session) {
+      redirecionarConformeStatus(data.session);
+    }
+  })();
+
+  function redirecionarConformeStatus(session) {
+    const precisaTrocarSenha = session.user.user_metadata?.precisa_trocar_senha;
+    if (precisaTrocarSenha) {
+      window.location.href = "trocar-senha.html";
+    } else {
+      window.location.href = "ponte.html";
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const senha = document.getElementById("senha").value;
+
+    mensagemErro.style.display = "none";
+    botaoEntrar.disabled = true;
+    botaoEntrar.textContent = "Entrando...";
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: senha,
+    });
+
+    if (error) {
+      mensagemErro.textContent = "E-mail ou senha incorretos. Verifique o e-mail recebido após a inscrição e tente novamente.";
+      mensagemErro.style.display = "block";
+      botaoEntrar.disabled = false;
+      botaoEntrar.textContent = "Entrar";
+      return;
+    }
+
+    // Login bem-sucedido: verifica se precisa trocar a senha antes
+    // de liberar a área exclusiva.
+    const { data } = await supabaseClient.auth.getSession();
+    redirecionarConformeStatus(data.session);
+  });
+</script>
+
+</body>
+</html>

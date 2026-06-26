@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Área Exclusiva</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
+<style>
+  :root {
+    --bg: #121317;
+    --card-bg: #1b1d24;
+    --border: #2a2d36;
+    --text-primary: #f4f4f6;
+    --text-secondary: #9a9ca6;
+    --accent: #5b8def;
+    --accent-hover: #4575d6;
+    --radius: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .page {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0 0 6px 0;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+  }
+
+  p.descricao {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 28px 0;
+  }
+
+  .botao-acessar {
+    display: inline-block;
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease;
+  }
+
+  .botao-acessar:hover {
+    background: var(--accent-hover);
+  }
+
+  .botao-sair {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+
+  .estado-carregando,
+  .estado-negado {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  .estado-negado a {
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Estado: verificando sessão -->
+    <div id="estado-carregando" class="estado-carregando">
+      Verificando seu acesso...
+    </div>
+
+    <!-- Estado: logado, acesso liberado -->
+    <div id="estado-liberado" style="display:none;">
+      <p class="eyebrow" id="eyebrow-evento">Área exclusiva</p>
+      <h1>Acesso liberado</h1>
+      <p class="descricao">
+        Os materiais do Hackathon estão disponíveis na página exclusiva abaixo.
+      </p>
+      <a class="botao-acessar" id="link-area-exclusiva" href="#" target="_blank" rel="noopener">
+        Acessar materiais do Hackathon
+      </a>
+      <br />
+      <button class="botao-sair" id="botao-sair">Sair da conta</button>
+    </div>
+
+    <!-- Estado: não logado -->
+    <div id="estado-negado" class="estado-negado" style="display:none;">
+      Você precisa fazer login para acessar essa página.
+      <br /><br />
+      <a href="login.html">Voltar para o login</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  document.getElementById("eyebrow-evento").textContent = NOME_EVENTO;
+
+  const estadoCarregando = document.getElementById("estado-carregando");
+  const estadoLiberado = document.getElementById("estado-liberado");
+  const estadoNegado = document.getElementById("estado-negado");
+  const linkAreaExclusiva = document.getElementById("link-area-exclusiva");
+  const botaoSair = document.getElementById("botao-sair");
+
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+
+    estadoCarregando.style.display = "none";
+
+    if (data.session) {
+      const precisaTrocarSenha = data.session.user.user_metadata?.precisa_trocar_senha;
+
+      if (precisaTrocarSenha) {
+        // Por segurança: não libera a área exclusiva enquanto a senha
+        // temporária não tiver sido substituída.
+        window.location.href = "trocar-senha.html";
+        return;
+      }
+
+      // Sessão válida: libera o link da página exclusiva do Canva
+      linkAreaExclusiva.href = CANVA_AREA_EXCLUSIVA_URL;
+      estadoLiberado.style.display = "block";
+    } else {
+      // Sem sessão: volta para o login
+      estadoNegado.style.display = "block";
+    }
+  })();
+
+  botaoSair.addEventListener("click", async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+  });
+</script>
+
+</body>
+</html>

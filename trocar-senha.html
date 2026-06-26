@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Defina sua nova senha</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+
+<style>
+  :root {
+    --bg: #121317;
+    --card-bg: #1b1d24;
+    --border: #2a2d36;
+    --text-primary: #f4f4f6;
+    --text-secondary: #9a9ca6;
+    --accent: #5b8def;
+    --accent-hover: #4575d6;
+    --error-bg: #3a1f23;
+    --error-text: #ff8a8a;
+    --radius: 10px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .page {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin: 0 0 6px 0;
+  }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+  }
+
+  p.descricao {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0 0 26px 0;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .field {
+    margin-bottom: 18px;
+  }
+
+  input[type="password"] {
+    width: 100%;
+    padding: 11px 13px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+
+  input[type="password"]:focus {
+    border-color: var(--accent);
+  }
+
+  .dica-senha {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: -10px;
+    margin-bottom: 18px;
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button[type="submit"]:hover {
+    background: var(--accent-hover);
+  }
+
+  button[type="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .message {
+    display: none;
+    margin-top: 16px;
+    padding: 11px 13px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .message.error {
+    display: block;
+    background: var(--error-bg);
+    color: var(--error-text);
+  }
+
+  .estado-carregando {
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="card">
+
+    <div id="estado-carregando" class="estado-carregando">
+      Verificando sua sessão...
+    </div>
+
+    <div id="estado-formulario" style="display:none;">
+      <p class="eyebrow" id="eyebrow-evento">Área exclusiva</p>
+      <h1>Defina sua nova senha</h1>
+      <p class="descricao">
+        Este é seu primeiro acesso. Por segurança, escolha uma nova senha
+        antes de continuar. A senha temporária enviada por e-mail deixará
+        de funcionar.
+      </p>
+
+      <form id="form-trocar-senha">
+        <div class="field">
+          <label for="nova-senha">Nova senha</label>
+          <input type="password" id="nova-senha" name="nova-senha" autocomplete="new-password" required minlength="6" />
+        </div>
+        <p class="dica-senha">Mínimo de 6 caracteres.</p>
+
+        <div class="field">
+          <label for="confirmar-senha">Confirme a nova senha</label>
+          <input type="password" id="confirmar-senha" name="confirmar-senha" autocomplete="new-password" required minlength="6" />
+        </div>
+
+        <button type="submit" id="botao-salvar">Salvar e continuar</button>
+
+        <div class="message error" id="mensagem-erro"></div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  document.getElementById("eyebrow-evento").textContent = NOME_EVENTO;
+
+  const estadoCarregando = document.getElementById("estado-carregando");
+  const estadoFormulario = document.getElementById("estado-formulario");
+  const form = document.getElementById("form-trocar-senha");
+  const botaoSalvar = document.getElementById("botao-salvar");
+  const mensagemErro = document.getElementById("mensagem-erro");
+
+  // Se não houver sessão ativa, volta para o login.
+  // Se já tiver trocado a senha antes, manda direto para a ponte.
+  (async () => {
+    const { data } = await supabaseClient.auth.getSession();
+
+    if (!data.session) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    const precisaTrocarSenha = data.session.user.user_metadata?.precisa_trocar_senha;
+
+    if (!precisaTrocarSenha) {
+      window.location.href = "ponte.html";
+      return;
+    }
+
+    estadoCarregando.style.display = "none";
+    estadoFormulario.style.display = "block";
+  })();
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const novaSenha = document.getElementById("nova-senha").value;
+    const confirmarSenha = document.getElementById("confirmar-senha").value;
+
+    mensagemErro.style.display = "none";
+
+    if (novaSenha !== confirmarSenha) {
+      mensagemErro.textContent = "As senhas não coincidem. Digite a mesma senha nos dois campos.";
+      mensagemErro.style.display = "block";
+      return;
+    }
+
+    botaoSalvar.disabled = true;
+    botaoSalvar.textContent = "Salvando...";
+
+    // Atualiza a senha e marca que a troca obrigatória já foi feita,
+    // para que esta tela não apareça novamente nos próximos acessos.
+    const { error } = await supabaseClient.auth.updateUser({
+      password: novaSenha,
+      data: { precisa_trocar_senha: false },
+    });
+
+    if (error) {
+      mensagemErro.textContent = "Não foi possível salvar a nova senha. Tente novamente em alguns instantes.";
+      mensagemErro.style.display = "block";
+      botaoSalvar.disabled = false;
+      botaoSalvar.textContent = "Salvar e continuar";
+      return;
+    }
+
+    window.location.href = "ponte.html";
+  });
+</script>
+
+</body>
+</html>
