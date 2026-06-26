@@ -45,8 +45,8 @@ from supabase import create_client, Client
 # CONFIGURAÇÃO — edite estes valores
 # ============================================================
 
-SUPABASE_URL = "https://racwxzwfyssyvirswsaf.supabase.co"
-SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhY3d4endmeXNzeXZpcnN3c2FmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTcyMTAxMSwiZXhwIjoyMDk3Mjk3MDExfQ.umJDX73-GrDRZ4NvSA6YU0oCFCvpPgd1AjBJPVahWpU"
+SUPABASE_URL = "COLE_AQUI_A_PROJECT_URL"
+SUPABASE_SERVICE_ROLE_KEY = "COLE_AQUI_A_SERVICE_ROLE_KEY"
 
 ARQUIVO_CSV_ENTRADA = "membros.csv"        # CSV exportado do Fillout
 ARQUIVO_CSV_SAIDA = "membros_com_senha.csv"  # CSV gerado com e-mail + senha
