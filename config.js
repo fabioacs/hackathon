@@ -21,4 +21,4 @@ const CANVA_AREA_EXCLUSIVA_URL = "https://hackathonunicesumar.com.br/exclusivo";
 
 // Nome do evento (aparece no título e nos textos das páginas)
 // Pode editar livremente aqui sem precisar tocar no resto do código.
-const NOME_EVENTO = "Hackathon";
+const NOME_EVENTO = "Hackathon Unicesumar 2026";
